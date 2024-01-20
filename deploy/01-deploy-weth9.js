@@ -11,13 +11,28 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     const { deployer } = await getNamedAccounts()
     const chainId = network.config.chainId;
     const args = [];
+    let contractList = {};
+    if (chainId == 31337) {
+        contractList = networkConfig[chainId]["contractList"];
+    } else {
+        contractList = networkConfig[chainId]["contractList"];
+    }
+
+    let weth9 = contractList.weth9;
     
     log("----------------------------------------------------");
-    await deploy("WETH9",{
-        from: deployer,
-        log:true,
-        args:args,
-    });
+    const WETH9 = await ethers.getContractFactory('WETH9');
+    if (weth9) {
+        weth9 = WETH9.attach(weth9);
+        console.log("weth9==================>",weth9.address);
+    } else {
+        weth9 = await deploy("WETH9",{
+            from: deployer,
+            log:true,
+            args:args,
+        });
+        console.log("weth9==================>",weth9.address);
+    }
     
     
 

@@ -21,15 +21,15 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     const args = [FEETOSETTER];
     
     log("----------------------------------------------------");
-    const PancakeFactory = await ethers.getContractFactory('PancakeFactory');
     if (pancakeFactory) {
-        pancakeFactory = PancakeFactory.attach(pancakeFactory);
+        console.log("pancakeFactory==================>",contractList.pancakeFactory);
     } else {
-        await deploy("PancakeFactory",{
+        pancakeFactory = await deploy("PancakeFactory",{
             from: deployer,
             log:true,
             args:args,
-        })
+        });
+        console.log("pancakeFactory==================>",pancakeFactory.address);
     }
     
     

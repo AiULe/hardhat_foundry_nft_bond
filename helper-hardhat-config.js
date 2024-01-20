@@ -16,7 +16,9 @@ const networkConfig = {
             op: '',
             usdc_fish_lp: '',
             fishNft: '',
-            usdcBuyNftLogic: ''
+            usdcBuyNftLogic: '',
+            weth9:'',
+            wtest:''
         },
     },
     31337: {
@@ -34,7 +36,9 @@ const networkConfig = {
             op: '',
             usdc_fish_lp: '',
             fishNft: '',
-            usdcBuyNftLogic: ''
+            usdcBuyNftLogic: '',
+            weth9:'',
+            wtest:''
         },
     },
     11155111: {
@@ -52,7 +56,9 @@ const networkConfig = {
             op: '',
             usdc_fish_lp: '',
             fishNft: '',
-            usdcBuyNftLogic: ''
+            usdcBuyNftLogic: '',
+            weth9:'',
+            wtest:''
         },
     },
     1: {
@@ -70,7 +76,9 @@ const networkConfig = {
             op: '',
             usdc_fish_lp: '',
             fishNft: '',
-            usdcBuyNftLogic: ''
+            usdcBuyNftLogic: '',
+            weth9:'',
+            wtest:''
         },
     },
 }

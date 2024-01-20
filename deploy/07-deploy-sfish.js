@@ -23,6 +23,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     const SFISH = await ethers.getContractFactory('sFISH');
     if (contractList.sFISH) {
         var sFISH = SFISH.attach(contractList.sFISH);
+        console.log("sFISH==================>",sFISH.address);
     } else {
         sFISH = await SFISH.deploy(contractList.fish);
         await sleep(10000);
@@ -34,9 +35,10 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
         await contractList.fish.mint(deployer.address, '1000000000000000000');
         await sleep(10000);
         await sFISH.mint('1000000000000000000'); console.log("sFISH.mint");
+        contractList.sFISH = sFISH.address;
+        console.log("sFISH==================>",sFISH.address);
     }
-    contractList.sFISH = sFISH.address;
-    console.log("sFISH:", contractList.sFISH);
+    
     await sleep(10000);
     
     
