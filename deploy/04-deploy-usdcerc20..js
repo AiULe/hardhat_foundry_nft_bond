@@ -19,16 +19,11 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     let usdc = contractList.usdc;
     
     log("----------------------------------------------------");
-    const USDCERC20 = await ethers.getContractFactory('FishERC20');
-    if (usdc) {
-        usdc = USDCERC20.attach(usdc);
-        console.log("usdc==================>", usdc);
-    } else {
-        usdc = await upgrades.deployProxy(USDCERC20, ['USDC-test', 'USDC-test', deployer, '100000000000000000000000000'], { initializer: 'initialize' });
-        await usdc.deployed();
-        // await usdc.waitForDeployment();
-        console.log("usdc==================>", usdc.address);
-    }
+    const USDCERC20 = await ethers.getContractFactory("FishERC20");
+    usdc = await upgrades.deployProxy(USDCERC20, ['USDC-test', 'USDC-test', deployer, '100000000000000000000000000'], { initializer: 'initialize' });
+    await usdc.deployed();
+    // await usdc.waitForDeployment();
+    console.log("usdc==================>", usdc.address);
     
     
     

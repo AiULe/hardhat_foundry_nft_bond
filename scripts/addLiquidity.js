@@ -8,21 +8,18 @@ const { sleep } = require("../utils/sleep.js");
 async function addLiquidity() {
     const chainId = network.config.chainId;
     const contractList = {};
-    if (chainId == 31337) {
-        contractList = networkConfig[chainId]["contractList"];
-    } else {
-        contractList = networkConfig[chainId]["contractList"];
-    }
-    const fish = contractList.fish;
-    const usdc = contractList.usdc;
+    const pancakeFactory = await ethers.getContract('PancakeFactory');
+    const fish = await ethers.getContract('FishERC20');
+    const usdc = await ethers.getContract('FishERC20');
+    const pancakeRouter = await ethers.getContract("PancakeRouter");
     await pancakeFactory.createPair(fish, usdc);
     await sleep(10000);
-    var usdc_fish_lp_address = await pancakeFactory.getPair(fish, usdc);
+    var usdc_fish_lp_address = await pancakeFactory.getPair(fish.address, usdc.address);
     console.log("usdc_fish_lp_address:", usdc_fish_lp_address);
     contractList.usdc_fish_lp = usdc_fish_lp_address;
-    await usdc.approve(contractList.pancakeRouter, '1000000000000000000000000000000'); console.log("usdc.approve:");
+    await usdc.approve(pancakeRouter.address, '1000000000000000000000000000000'); console.log("usdc.approve:");
     await sleep(10000);
-    await fish.approve(contractList.pancakeRouter, '1000000000000000000000000000000'); console.log("fish.approve:");
+    await fish.approve(pancakeRouter.address, '1000000000000000000000000000000'); console.log("fish.approve:");
     await sleep(10000);
     await pancakeRouter.addLiquidity(
         fish.address,

@@ -3,7 +3,7 @@ const { network, ethers,upgrades  } = require("hardhat");
 const {
     networkConfig,
     developmentChains,
-} = require("../helper-hardhat-config")
+} = require("../helper-hardhat-config.js")
 const { verify } = require("../utils/verify")
 
 module.exports = async ({ getNamedAccounts, deployments }) => {
@@ -21,23 +21,21 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     const args = [FEETOSETTER];
     
     log("----------------------------------------------------");
-    if (pancakeFactory) {
-        console.log("pancakeFactory==================>",contractList.pancakeFactory);
-    } else {
-        pancakeFactory = await deploy("PancakeFactory",{
-            from: deployer,
-            log:true,
-            args:args,
-        });
-        console.log("pancakeFactory==================>",pancakeFactory.address);
-    }
-    
+    pancakeFactory = await deploy("PancakeFactory",{
+        from: deployer,
+        log:true,
+        args:args,
+    });
+    // console.log("pancakeFactory=======>",pancakeFactory);
+    console.log("pancakeFactoryAddress==================>",pancakeFactory.address);
+    const pancakefactoryContract = await ethers.getContract("PancakeFactory",deployer);
+    console.log("INIT_CODE_PAIR_HASH==================>",await pancakefactoryContract.INIT_CODE_PAIR_HASH());
     
 
     // Verify the deployment
     if (!developmentChains.includes(network.name) && process.env.ETHERSCAN_API_KEY) {
         log("Verifying...");
-        await verify(PancakeFactory.address, arguments);
+        await verify(pancakeFactory.address, arguments);
     }
 
     log("Enter pancakeFactory with command:");

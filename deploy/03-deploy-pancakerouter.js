@@ -23,17 +23,12 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     
     log("----------------------------------------------------");
     const PancakeRouter = await ethers.getContractFactory('PancakeRouter');
-    if (pancakeRouter) {
-        pancakeRouter = PancakeRouter.attach(pancakeRouter);
-        console.log("pancakeRouter==================>",pancakeRouter.address);
-    } else {
-        pancakeRouter = await deploy("PancakeRouter",{
-            from: deployer,
-            log:true,
-            args:args,
-        });
-        console.log("pancakeRouter==================>",pancakeRouter.address);
-    }
+    pancakeRouter = await deploy("PancakeRouter",{
+        from: deployer,
+        log:true,
+        args:args,
+    });
+    console.log("pancakeRouter==================>",pancakeRouter.address);
     
     
 

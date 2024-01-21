@@ -22,18 +22,12 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     let wtest = contractList.weth9;
     
     log("----------------------------------------------------");
-    const WTEST = await ethers.getContractFactory('WTEST');
-    if (wtest) {
-        wtest = WTEST.attach(wtest);
-        console.log("weth9==================>",wtest.address);
-    } else {
-        wtest = await deploy("WTEST",{
-            from: deployer,
-            log:true,
-            args:args,
-        });
-        console.log("wtest==================>",wtest.address);
-    }
+    wtest = await deploy("WTEST",{
+        from: deployer,
+        log:true,
+        args:args,
+    });
+    console.log("wtest==================>",wtest.address);
     
     
 
@@ -49,4 +43,4 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     log("----------------------------------------------------");
 }
 
-module.exports.tags = ["all", "weth9"]
+module.exports.tags = ["all", "wtest"]
