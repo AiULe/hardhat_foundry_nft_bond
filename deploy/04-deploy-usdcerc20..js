@@ -3,6 +3,7 @@ const { network, ethers,upgrades  } = require("hardhat");
 const {
     networkConfig,
     developmentChains,
+    VERIFICATION_BLOCK_CONFIRMATIONS
 } = require("../helper-hardhat-config")
 const { verify } = require("../utils/verify.js")
 
@@ -16,6 +17,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     } else {
         contractList = networkConfig[chainId]["contractList"];
     }
+
     let usdc = contractList.usdc;
     
     log("----------------------------------------------------");
@@ -23,7 +25,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     usdc = await upgrades.deployProxy(USDCERC20, ['USDC-test', 'USDC-test', deployer, '100000000000000000000000000'], { initializer: 'initialize' });
     await usdc.deployed();
     // await usdc.waitForDeployment();
-    console.log("usdc==================>", usdc.address);
+    console.log("usdc==================>", usdc.address);    
     
     
     

@@ -7,9 +7,11 @@ describe("PancakeFactory",async function(){
     let pancakefactory;
 
     beforeEach(async function(){
-        deployer = (await getNamedAccounts()).deployer;
-        await deployments.fixture(["pancakefactory"]); //表明我们要部署所有内容
-        pancakefactory = await ethers.getContract("PancakeFactory",deployer);
+        const PancakeFactory = await ethers.getContractFactory("PancakeFactory");
+        console.log("Deploying contract...");
+        pancakefactory = await PancakeFactory.deploy("0x49A0804c9D0DdA121C6a15bb46d528DBAe64f461");
+        console.log(`Deployed contract to:${await pancakefactory.address}`);
+        console.log("INIT_CODE_PAIR_HASH==================>",await pancakefactory.INIT_CODE_PAIR_HASH());        
     })
 
     describe("PancakeFactory", async function(){

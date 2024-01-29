@@ -37,3 +37,11 @@ ethers-packagejson:
 },
 
 import { getContractAddress } from 'ethers/lib/utils';
+
+`// const usdcerc20 = await deploy("FishERC20", { // from: deployer, // args: [], // log: true, // waitConfirmations: waitBlockConfirmations, // proxy: { // proxyContract: "OpenZeppelinTransparentProxy", // viaAdminContract: { // name: "UsdcErc20ProxyAdmin", // artifact: "UsdcErc20ProxyAdmin", // }, // }, // }); // const transparentProxy = await ethers.getContract("FishERC20_Proxy"); // console.log("transparentProxy=================>",transparentProxy); // const proxyUsdcErc20 = await ethers.getContractAt("FishERC20", transparentProxy.target); // console.log("proxyUsdcErc20===========>",proxyUsdcErc20);`
+
+@nomicfoundation/hardhat-chai-matchers@^2.0.0 @nomicfoundation/hardhat-ethers@^3.0.0 @nomicfoundation/hardhat-network-helpers@^1.0.0 @nomicfoundation/hardhat-verify@^2.0.0 @typechain/ethers-v6@^0.5.0
+
+"@boringcrypto/boring-solidity": "boringcrypto/BoringSolidity#51616f5bbab53adaf6379428de08c9d8093c63f5",
+"@sushiswap/bentobox-sdk": "sushiswap/bentobox-sdk#e3f809870b86afbd57e0930662221d2362a160db",
+"@sushiswap/core": "^1.4.2",

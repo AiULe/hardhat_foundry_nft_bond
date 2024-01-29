@@ -21,15 +21,11 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     const args = [FEETOSETTER];
     
     log("----------------------------------------------------");
-    pancakeFactory = await deploy("PancakeFactory",{
-        from: deployer,
-        log:true,
-        args:args,
-    });
-    // console.log("pancakeFactory=======>",pancakeFactory);
-    console.log("pancakeFactoryAddress==================>",pancakeFactory.address);
-    const pancakefactoryContract = await ethers.getContract("PancakeFactory",deployer);
-    console.log("INIT_CODE_PAIR_HASH==================>",await pancakefactoryContract.INIT_CODE_PAIR_HASH());
+    const PancakeFactory = await ethers.getContractFactory("PancakeFactory");
+    console.log("Deploying contract...");
+    pancakeFactory = await PancakeFactory.deploy("0x49A0804c9D0DdA121C6a15bb46d528DBAe64f461");
+    console.log(`Deployed contract to:${await pancakeFactory.address}`);
+    console.log("INIT_CODE_PAIR_HASH==================>",await pancakeFactory.INIT_CODE_PAIR_HASH());
     
 
     // Verify the deployment
