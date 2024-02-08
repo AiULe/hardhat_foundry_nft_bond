@@ -178,6 +178,10 @@ module.exports = {
         //   url: MAINNET_RPC_URL
         // }
         chainId: 31337,
+        forking: {
+          enabled: process.env.FORKING === "true",
+          url: process.env.ETHEREUM_RPC_URL || `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
+        },
     },
     localhost: {
         chainId: 31337,

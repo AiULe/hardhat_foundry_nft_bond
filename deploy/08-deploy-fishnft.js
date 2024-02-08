@@ -29,7 +29,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     }
     contractList.fishNft = fishNft.address;
     console.log("fishNft:", contractList.fishNft);
-    await sleep(10000);
+    // await sleep(10000);
     
     
 

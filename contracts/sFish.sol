@@ -7,6 +7,7 @@ import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
 import "@boringcrypto/boring-solidity/contracts/Domain.sol";
 import "@boringcrypto/boring-solidity/contracts/ERC20.sol";
 import "@boringcrypto/boring-solidity/contracts/BoringBatchable.sol";
+import "hardhat/console.sol";
 
 // Staking in sFISH inspired by Chef Nomi's SushiBar - MIT license (originally WTFPL)
 // modified by BoringCrypto for DictatorDAO

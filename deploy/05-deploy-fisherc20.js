@@ -19,10 +19,17 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     let fish = contractList.fish;
     
     log("----------------------------------------------------");
-    // fish = await upgrades.deployProxy(FISHERC20, ['Fish Token', 'FISH', deployer, '100000000000000000'], { initializer: 'initialize' });
-    // // console.log("fish===>",fish);
-    // await fish.deployed();
-    // console.log("fish==================>", fish.address);
+    const FishERC20 = await ethers.getContractFactory("FishERC20");
+    if(contractList.fish){
+        fish = FishERC20.attach(contractList.fish);
+        console.log(`Deployed contract to:${await fish.address}`);
+    } else {
+        console.log("Deploying contract...");
+        fish = await upgrades.deployProxy(FishERC20, ['Fish Token', 'FISH', deployer, '100000000000000000'], { initializer: 'initialize' });
+        await fish.deployed();
+        console.log(`Deployed contract to:${await fish.address}`);
+    }
+    
     
     
 

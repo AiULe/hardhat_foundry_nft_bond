@@ -21,10 +21,13 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     log("----------------------------------------------------");
     const FISHORACLE = await ethers.getContractFactory('FishOracle');
     if (fishOracle) {
-        fishOracle = FISHORACLE.attach(usdc);
+        fishOracle = FISHORACLE.attach(fishOracle);
         console.log("fishOracle==================>",fishOracle.address);
     } else {
-        fishOracle = await upgrades.deployProxy(FISHORACLE, [contractList.usdc_fish_lp_address, contractList.fish], { initializer: 'initialize' });
+        console.log("bug1=============>");
+        console.log("usdc_fish_lp_address=====>",contractList.usdc_fish_lp_address);
+        fishOracle = await upgrades.deployProxy(FISHORACLE, [contractList.usdc_fish_lp, contractList.fish], { initializer: 'initialize' });
+        console.log("bug2=============>");
         await fishOracle.deployed();
         console.log("fishOracle==================>",fishOracle.address);
     }

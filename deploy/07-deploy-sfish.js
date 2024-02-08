@@ -17,29 +17,55 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     } else {
         contractList = networkConfig[chainId]["contractList"];
     }
-    // let fishOracle = contractList.fishOracle;
+    let sFISH = contractList.sFISH;
     
     log("----------------------------------------------------");
     const SFISH = await ethers.getContractFactory('sFISH');
     if (contractList.sFISH) {
-        var sFISH = SFISH.attach(contractList.sFISH);
+        sFISH = SFISH.attach(contractList.sFISH);
         console.log("sFISH==================>",sFISH.address);
     } else {
-        sFISH = await SFISH.deploy(contractList.fish);
-        await sleep(10000);
-        //定价
-        await contractList.fish.approve(sFISH.address, '1000000000000000000000000000000'); console.log("fish.approve:sFISH");
-        await sleep(10000);
-        await contractList.fish.setExecutor(deployer, true); console.log("fish.setExecutor deployer.address");
-        await sleep(10000);
-        await contractList.fish.mint(deployer.address, '1000000000000000000');
-        await sleep(10000);
-        await sFISH.mint('1000000000000000000'); console.log("sFISH.mint");
-        contractList.sFISH = sFISH.address;
-        console.log("sFISH==================>",sFISH.address);
+        console.log("Deploying contract...");
+        const FishERC20 = await ethers.getContractFactory('FishERC20');
+        const fish = await upgrades.deployProxy(FishERC20, ['Fish Token', 'FISH', deployer, '100000000000000000'], { initializer: 'initialize' });
+        await fish.deployed();
+        console.log(`fish address:${await fish.address}`);
+            
+        sFISH = await SFISH.deploy(fish.address);
+        console.log("sFISH address:", sFISH.address);
+
+            
+        try {
+          console.log("Approving sFISH to spend Fish tokens...");
+          await fish.approve(sFISH.address, '1000000000000000000000000000000');
+          console.log("fish.approve:sFISH succeeded");
+        } catch (error) {
+          console.error("fish.approve:sFISH failed:", error);
+        }
+        
+        try {
+          console.log("Setting executor for FishERC20...");
+          await fish.setExecutor(deployer, true);
+          console.log("fish.setExecutor succeeded");
+        } catch (error) {
+          console.error("fish.setExecutor failed:", error);
+        }
+        
+        try {
+          console.log("Minting Fish tokens...");
+          await fish.mint(deployer, '1000000000000000000');
+          console.log("fish.mint succeeded");
+        
+          console.log("Minting SFISH tokens...");
+          await sFISH.mint('1000000000000000000');
+          console.log("sFISH.mint succeeded");
+        } catch (error) {
+          console.error("Token minting failed:", error);
+        }
+
     }
     
-    await sleep(10000);
+    // await sleep(10000);
     
     
 

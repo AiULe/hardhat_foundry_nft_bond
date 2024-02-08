@@ -22,12 +22,19 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     let wtest = contractList.weth9;
     
     log("----------------------------------------------------");
-    wtest = await deploy("WTEST",{
-        from: deployer,
-        log:true,
-        args:args,
-    });
-    console.log("wtest==================>",wtest.address);
+    const WTEST = await ethers.getContractFactory("WTEST");
+    if(contractList.WTEST){
+        wtest = WTEST.attach(contractList.wtest);
+        console.log(`Deployed contract to:${await wtest.address}`);
+    } else {
+        console.log("Deploying contract...");
+        wtest = await deploy("WTEST",{
+            from: deployer,
+            log:true,
+            args:args,
+        });
+        console.log("wtest==================>",wtest.address);
+    }
     
     
 
