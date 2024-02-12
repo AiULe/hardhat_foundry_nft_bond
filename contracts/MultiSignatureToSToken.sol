@@ -1,229 +1,152 @@
-// SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity ^0.8.10;
+// SPDX-License-Identifier: MIT
+// author: @0xAA_Science from wtf.academy
+pragma solidity ^0.8.4;
 
-/// @title xuan gnosis
-/// @author xuan
-/// @notice An optimised ERC712-based multisig implementation
+/// 基于签名的多签钱包，由gnosis safe合约简化而来，教学使用。
 contract MultiSignatureToSToken {
-    /// ERRORS ///
+    event ExecutionSuccess(bytes32 txHash);    // 交易成功事件
+    event ExecutionFailure(bytes32 txHash);    // 交易失败事件
+    address[] public owners;                   // 多签持有人数组 
+    mapping(address => bool) public isOwner;   // 记录一个地址是否为多签
+    uint256 public ownerCount;                 // 多签持有人数量
+    uint256 public threshold;                  // 多签执行门槛，交易至少有n个多签人签名才能被执行。
+    uint256 public nonce;                      // nonce，防止签名重放攻击
 
-    /// @notice Thrown when the provided signatures are invalid, duplicated, or out of order
-    error InvalidSignatures();
+    receive() external payable {}
 
-    /// @notice Thrown when the execution of the requested transaction fails
-    error ExecutionFailed();
+    // 构造函数，初始化owners, isOwner, ownerCount, threshold 
+    constructor(        
+        address[] memory _owners,
+        uint256 _threshold
+    ) {
+        _setupOwners(_owners, _threshold);
+    }
 
-    /// EVENTS ///
+    /// @dev 初始化owners, isOwner, ownerCount,threshold 
+    /// @param _owners: 多签持有人数组
+    /// @param _threshold: 多签执行门槛，至少有几个多签人签署了交易
+    function _setupOwners(address[] memory _owners, uint256 _threshold) internal {
+        // threshold没被初始化过
+        require(threshold == 0, "WTF5000");
+        // 多签执行门槛 小于 多签人数
+        require(_threshold <= _owners.length, "WTF5001");
+        // 多签执行门槛至少为1
+        require(_threshold >= 1, "WTF5002");
 
-    /// @notice Emitted when the number of required signatures is updated
-    /// @param newQuorum The new amount of required signatures
-    event QuorumUpdated(uint256 newQuorum);
+        for (uint256 i = 0; i < _owners.length; i++) {
+            address owner = _owners[i];
+            // 多签人不能为0地址，本合约地址，不能重复
+            require(owner != address(0) && owner != address(this) && !isOwner[owner], "WTF5003");
+            owners.push(owner);
+            isOwner[owner] = true;
+        }
+        ownerCount = _owners.length;
+        threshold = _threshold;
+    }
 
-    /// @notice Emitted when a new transaction is executed
-    /// @param target The address the transaction was sent to
-    /// @param value The amount of ETH sent in the transaction
-    /// @param payload The data sent in the transaction
-    event Executed(address target, uint256 value, bytes payload);
+    /// @dev 在收集足够的多签签名后，执行交易
+    /// @param to 目标合约地址
+    /// @param value msg.value，支付的以太坊
+    /// @param data calldata
+    /// @param signatures 打包的签名，对应的多签地址由小到达，方便检查。 ({bytes32 r}{bytes32 s}{uint8 v}) (第一个多签的签名, 第二个多签的签名 ... )
+    function execTransaction(
+        address to,
+        uint256 value,
+        bytes memory data,
+        bytes memory signatures
+    ) public payable virtual returns (bool success) {
+        // 编码交易数据，计算哈希
+        bytes32 txHash = encodeTransactionData(to, value, data, nonce, block.chainid);
+        nonce++;  // 增加nonce
+        checkSignatures(txHash, signatures); // 检查签名
+        // 利用call执行交易，并获取交易结果
+        (success, ) = to.call{value: value}(data);
+        require(success , "WTF5004");
+        if (success) emit ExecutionSuccess(txHash);
+        else emit ExecutionFailure(txHash);
+    }
 
-    /// @notice Emitted when a new signer gets added or removed from the trusted signers
-    /// @param signer The address of the updated signer
-    /// @param shouldTrust Wether the contract will trust this signer going forwards
-    event SignerUpdated(address indexed signer, bool shouldTrust);
+    /**
+     * @dev 检查签名和交易数据是否对应。如果是无效签名，交易会revert
+     * @param dataHash 交易数据哈希
+     * @param signatures 几个多签签名打包在一起
+     */
+    function checkSignatures(
+        bytes32 dataHash,
+        bytes memory signatures
+    ) public view {
+        // 读取多签执行门槛
+        uint256 _threshold = threshold;
+        require(_threshold > 0, "WTF5005");
 
-    /// @dev Components of an Ethereum signature
-    struct Signature {
+        // 检查签名长度足够长
+        require(signatures.length >= _threshold * 65, "WTF5006");
+
+        // 通过一个循环，检查收集的签名是否有效
+        // 大概思路：
+        // 1. 用ecdsa先验证签名是否有效
+        // 2. 利用 currentOwner > lastOwner 确定签名来自不同多签（多签地址递增）
+        // 3. 利用 isOwner[currentOwner] 确定签名者为多签持有人
+        address lastOwner = address(0); 
+        address currentOwner;
         uint8 v;
         bytes32 r;
         bytes32 s;
-    }
-
-    /// @notice Signature nonce, incremented with each successful execution or state change
-    /// @dev This is used to prevent signature reuse
-    /// @dev Initialised at 1 because it makes the first transaction slightly cheaper
-    uint256 public nonce = 1;
-
-    /// @notice The amount of required signatures to execute a transaction or change the state
-    uint256 public quorum;
-
-    /// @dev The EIP-712 domain separator
-    bytes32 public immutable domainSeparator;
-
-    /// @notice A list of signers, and wether they're trusted by this contract
-    /// @dev This automatically generates a getter for us!
-    mapping(address => bool) public isSigner;
-
-    /// @dev EIP-712 types for a signature that updates the quorum
-    bytes32 public constant QUORUM_HASH =
-        keccak256("UpdateQuorum(uint256 newQuorum,uint256 nonce)");
-
-    /// @dev EIP-712 types for a signature that updates a signer state
-    bytes32 public constant SIGNER_HASH =
-        keccak256(
-            "UpdateSigner(address signer,bool shouldTrust,uint256 nonce)"
-        );
-
-    /// @dev EIP-712 types for a signature that executes a transaction
-    bytes32 public constant EXECUTE_HASH =
-        keccak256(
-            "Execute(address target,uint256 value,bytes payload,uint256 nonce)"
-        );
-
-    /// @notice Deploy a new LilGnosis instance, with the specified name, trusted signers and number of required signatures
-    /// @param name The name of the multisig
-    /// @param signers An array of addresses to trust
-    /// @param _quorum The number of required signatures to execute a transaction or change the state
-    constructor(
-        string memory name,
-        address[] memory signers,
-        uint256 _quorum
-    ) payable {
-        unchecked {
-            for (uint256 i = 0; i < signers.length; i++)
-                isSigner[signers[i]] = true;
+        uint256 i;
+        for (i = 0; i < _threshold; i++) {
+            (v, r, s) = signatureSplit(signatures, i);
+            // 利用ecrecover检查签名是否有效
+            currentOwner = ecrecover(keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", dataHash)), v, r, s);
+            require(currentOwner > lastOwner && isOwner[currentOwner], "WTF5007");
+            lastOwner = currentOwner;
         }
-
-        quorum = _quorum;
-
-        domainSeparator = keccak256(
-            abi.encode(
-                keccak256(
-                    "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
-                ),
-                keccak256(bytes(name)),
-                keccak256(bytes("1")),
-                block.chainid,
-                address(this)
-            )
-        );
+    }
+    
+    /// 将单个签名从打包的签名分离出来
+    /// @param signatures 打包的多签
+    /// @param pos 要读取的多签index.
+    function signatureSplit(bytes memory signatures, uint256 pos)
+        internal
+        pure
+        returns (
+            uint8 v,
+            bytes32 r,
+            bytes32 s
+        )
+    {
+        // 签名的格式：{bytes32 r}{bytes32 s}{uint8 v}
+        assembly {
+            let signaturePos := mul(0x41, pos)
+            r := mload(add(signatures, add(signaturePos, 0x20)))
+            s := mload(add(signatures, add(signaturePos, 0x40)))
+            v := and(mload(add(signatures, add(signaturePos, 0x41))), 0xff)
+        }
     }
 
-    /// @notice Execute a transaction from the multisig, providing the required amount of signatures
-    /// @param target The address to send the transaction to
-    /// @param value The amount of ETH to send in the transaction
-    /// @param payload The data to send in the transaction
-    /// @param sigs An array of signatures from trusted signers, sorted in ascending order by the signer's addresses
-    /// @dev Make sure the signatures are sorted in ascending order by the signer's addresses! Otherwise the verification will fail
-    function execute(
-        address target,
+    /// @dev 编码交易数据
+    /// @param to 目标合约地址
+    /// @param value msg.value，支付的以太坊
+    /// @param data calldata
+    /// @param _nonce 交易的nonce.
+    /// @param chainid 链id
+    /// @return 交易哈希bytes.
+    function encodeTransactionData(
+        address to,
         uint256 value,
-        bytes calldata payload,
-        Signature[] calldata sigs
-    ) public payable {
-        bytes32 digest = keccak256(
-            abi.encodePacked(
-                "\x19\x01",
-                domainSeparator,
-                keccak256(
-                    abi.encode(EXECUTE_HASH, target, value, payload, nonce++)
+        bytes memory data,
+        uint256 _nonce,
+        uint256 chainid
+    ) public pure returns (bytes32) {
+        bytes32 safeTxHash =
+            keccak256(
+                abi.encode(
+                    to,
+                    value,
+                    keccak256(data),
+                    _nonce,
+                    chainid
                 )
-            )
-        );
-
-        address previous;
-
-        unchecked {
-            for (uint256 i = 0; i < quorum; i++) {
-                address sigAddress = ecrecover(
-                    digest,
-                    sigs[i].v,
-                    sigs[i].r,
-                    sigs[i].s
-                );
-
-                if (!isSigner[sigAddress] || previous >= sigAddress)
-                    revert InvalidSignatures();
-
-                previous = sigAddress;
-            }
-        }
-
-        emit Executed(target, value, payload);
-
-        (bool success, ) = target.call{value: value}(payload);
-
-        if (!success) revert ExecutionFailed();
+            );
+        return safeTxHash;
     }
-
-    /// @notice Update the amount of required signatures to execute a transaction or change state, providing the required amount of signatures
-    /// @param _quorum The new number of required signatures
-    /// @param sigs An array of signatures from trusted signers, sorted in ascending order by the signer's addresses
-    /// @dev Make sure the signatures are sorted in ascending order by the signer's addresses! Otherwise the verification will fail
-    function setQuorum(
-        uint256 _quorum,
-        Signature[] calldata sigs
-    ) public payable {
-        bytes32 digest = keccak256(
-            abi.encodePacked(
-                "\x19\x01",
-                domainSeparator,
-                keccak256(abi.encode(QUORUM_HASH, _quorum, nonce++))
-            )
-        );
-
-        address previous;
-
-        unchecked {
-            for (uint256 i = 0; i < quorum; i++) {
-                address sigAddress = ecrecover(
-                    digest,
-                    sigs[i].v,
-                    sigs[i].r,
-                    sigs[i].s
-                );
-
-                if (!isSigner[sigAddress] || previous >= sigAddress)
-                    revert InvalidSignatures();
-
-                previous = sigAddress;
-            }
-        }
-
-        emit QuorumUpdated(_quorum);
-
-        quorum = _quorum;
-    }
-
-    /// @notice Add or remove an address from the list of signers trusted by this contract
-    /// @param signer The address of the signer
-    /// @param shouldTrust Wether to trust this signer going forward
-    /// @param sigs An array of signatures from trusted signers, sorted in ascending order by the signer's addresses
-    /// @dev Make sure the signatures are sorted in ascending order by the signer's addresses! Otherwise the verification will fail
-    function setSigner(
-        address signer,
-        bool shouldTrust,
-        Signature[] calldata sigs
-    ) public payable {
-        bytes32 digest = keccak256(
-            abi.encodePacked(
-                "\x19\x01",
-                domainSeparator,
-                keccak256(abi.encode(SIGNER_HASH, signer, shouldTrust, nonce++))
-            )
-        );
-
-        address previous;
-
-        unchecked {
-            for (uint256 i = 0; i < quorum; i++) {
-                address sigAddress = ecrecover(
-                    digest,
-                    sigs[i].v,
-                    sigs[i].r,
-                    sigs[i].s
-                );
-
-                if (!isSigner[sigAddress] || previous >= sigAddress)
-                    revert InvalidSignatures();
-
-                previous = sigAddress;
-            }
-        }
-
-        emit SignerUpdated(signer, shouldTrust);
-
-        isSigner[signer] = shouldTrust;
-    }
-
-    /// @dev This function ensures this contract can receive ETH
-    receive() external payable {}
 }

@@ -24,8 +24,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
         fishOracle = FISHORACLE.attach(fishOracle);
         console.log("fishOracle==================>",fishOracle.address);
     } else {
-        console.log("bug1=============>");
-        console.log("usdc_fish_lp_address=====>",contractList.usdc_fish_lp_address);
+        console.log("usdc_fish_lp_address=====>",contractList.usdc_fish_lp);
         fishOracle = await upgrades.deployProxy(FISHORACLE, [contractList.usdc_fish_lp, contractList.fish], { initializer: 'initialize' });
         console.log("bug2=============>");
         await fishOracle.deployed();

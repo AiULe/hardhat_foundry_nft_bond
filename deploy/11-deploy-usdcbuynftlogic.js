@@ -17,7 +17,12 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     } else {
         contractList = networkConfig[chainId]["contractList"];
     }
-    // let fishOracle = contractList.fishOracle;
+    const FishFactory = await ethers.getContractFactory('FishERC20');
+    const fish = FishFactory.attach(contractList.fish);
+    const FishNftFactory = await ethers.getContractFactory('FishNft');
+    const fishNft = FishNftFactory.attach(contractList.fish);
+    const UsdcFactory = await ethers.getContractFactory('FishERC20');
+    const usdc = UsdcFactory.attach(contractList.usdc);
     
     log("----------------------------------------------------");
     const UsdcBuyNftLogic = await ethers.getContractFactory('usdcBuyNftLogic');
@@ -39,17 +44,18 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
         await usdcBuyNftLogic.deployed();
     }
 
-    contracts.usdcBuyNftLogic = usdcBuyNftLogic.address;
+    contractList.usdcBuyNftLogic = usdcBuyNftLogic.address;
     console.log("usdcBuyNftLogic:", contractList.usdcBuyNftLogic);
-    await sleep(10000);
+    // await sleep(10000);
 
+    console.log("bug1===========>");
     //设置执行者
     await fish.setExecutor(contractList.fishNft, true); console.log("fish.setExecutor");
-    await sleep(10000);
+    // await sleep(10000);
     await fish.setExecutor(contractList.usdcBuyNftLogic, true); console.log("fish.setExecutor");
-    await sleep(10000);
+    // await sleep(10000);
     await fishNft.setExecutor(contractList.usdcBuyNftLogic, true); console.log("fishNft.setExecutor");
-    await sleep(10000);
+    // await sleep(10000);
 
 
     //approve usdcBuyNftLogic 测试买入用
