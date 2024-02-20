@@ -4,7 +4,7 @@ const {
     networkConfig,
     developmentChains,
 } = require("../helper-hardhat-config.js")
-const { verify } = require("../utils/verify")
+const { verify } = require("../utils/verify.js")
 
 module.exports = async ({ getNamedAccounts, deployments }) => {
     const { deploy, log } = deployments
@@ -22,14 +22,9 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     
     log("----------------------------------------------------");
     const MultiSignature = await ethers.getContractFactory("MultiSignature");
-    if(contractList.multiSignature){
-        multiSignature = MultiSignature.attach(contractList.multiSignature);
-        console.log(`Deployed contract to:${await multiSignature.address}`);
-    } else {
-        console.log("Deploying contract...");
-        multiSignature = await MultiSignature.deploy(owners,threshold);
-        console.log(`Deployed contract to:${await multiSignature.address}`);
-    }
+    console.log("Deploying contract...");
+    multiSignature = await MultiSignature.deploy(owners,threshold);
+    console.log(`Deployed contract to:${await multiSignature.address}`);
     
 
     // Verify the deployment

@@ -21,12 +21,8 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     
     log("----------------------------------------------------");
     const FishNft = await ethers.getContractFactory('FishNft');
-    if (contractList.fishNft) {
-        var fishNft = FishNft.attach(contractList.fishNft);
-    } else {
-        fishNft = await upgrades.deployProxy(FishNft, ["0xFishBone Nft", 'FB-NFT', contractList.fish], { initializer: 'initialize' });
-        await fishNft.deployed();
-    }
+    let fishNft = await upgrades.deployProxy(FishNft, ["0xFishBone Nft", 'FB-NFT', contractList.fish], { initializer: 'initialize' });
+    await fishNft.deployed();
     contractList.fishNft = fishNft.address;
     console.log("fishNft:", contractList.fishNft);
     // await sleep(10000);

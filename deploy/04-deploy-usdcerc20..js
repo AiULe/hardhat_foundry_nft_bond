@@ -22,16 +22,11 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     
     log("----------------------------------------------------");
     const USDCERC20 = await ethers.getContractFactory("FishERC20");
-    if(contractList.usdc){
-        usdc = USDCERC20.attach(contractList.usdc);
-        console.log(`Deployed contract to:${await usdc.address}`);
-    } else {
-        console.log("Deploying contract...");
-        usdc = await upgrades.deployProxy(USDCERC20, ['USDC-test', 'USDC-test', deployer, '100000000000000000000000000'], { initializer: 'initialize' });
-        await usdc.deployed();
-        // await usdc.waitForDeployment();
-        console.log("usdc==================>", usdc.address);
-    }
+    console.log("Deploying contract...");
+    usdc = await upgrades.deployProxy(USDCERC20, ['USDC-test', 'USDC-test', deployer, '100000000000000000000000000'], { initializer: 'initialize' });
+    await usdc.deployed();
+    // await usdc.waitForDeployment();
+    console.log("usdc==================>", usdc.address);
 
     // Verify the deployment
     if (!developmentChains.includes(network.name) && process.env.ETHERSCAN_API_KEY) {

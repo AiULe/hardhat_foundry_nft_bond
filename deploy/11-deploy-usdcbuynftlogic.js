@@ -26,23 +26,19 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     
     log("----------------------------------------------------");
     const UsdcBuyNftLogic = await ethers.getContractFactory('usdcBuyNftLogic');
-    if (contractList.usdcBuyNftLogic) {
-        var usdcBuyNftLogic = UsdcBuyNftLogic.attach(contractList.usdcBuyNftLogic);
-    } else {
-        usdcBuyNftLogic = await upgrades.deployProxy(UsdcBuyNftLogic, [
-            contractList.fish,
-            contractList.fishNft,
-            contractList.pancakeFactory,
-            contractList.pancakeRouter,
-            contractList.multiSignature,
-            contractList.multiSignatureToSToken,
-            contractList.dev,
-            contractList.op,
-            contractList.sFISH,
-            contractList.fishOracle,
-            contractList.usdc], { initializer: 'initialize' });
-        await usdcBuyNftLogic.deployed();
-    }
+    let usdcBuyNftLogic = await upgrades.deployProxy(UsdcBuyNftLogic, [
+    contractList.fish,
+    contractList.fishNft,
+    contractList.pancakeFactory,
+    contractList.pancakeRouter,
+    contractList.multiSignature,
+    contractList.multiSignatureToSToken,
+    contractList.dev,
+    contractList.op,
+    contractList.sFISH,
+    contractList.fishOracle,
+    contractList.usdc], { initializer: 'initialize' });
+    await usdcBuyNftLogic.deployed();
 
     contractList.usdcBuyNftLogic = usdcBuyNftLogic.address;
     console.log("usdcBuyNftLogic:", contractList.usdcBuyNftLogic);

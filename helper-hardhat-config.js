@@ -2,7 +2,7 @@ const { ethers } = require("hardhat")
 
 const networkConfig = {
     default: {
-        name: "hardhat",
+        name: "localhost",
         contractList: {
             pancakeRouter: '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9',
             pancakeFactory: '0x5FbDB2315678afecb367f032d93F642f64180aa3',
@@ -22,7 +22,7 @@ const networkConfig = {
         },
     },
     31337: {
-        name: "localhost",
+        name: "hardhat",
         contractList: {
             pancakeRouter: '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9',
             pancakeFactory: '0x5FbDB2315678afecb367f032d93F642f64180aa3',
@@ -30,7 +30,7 @@ const networkConfig = {
             multiSignatureToSToken: '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0',
             usdc: '0x0165878A594ca255338adfa4d48449f69242Eb8F',
             fish: '0xa513E6E4b8f2a923D98304ec87F64353C4D5C853',
-            fishOracle: '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9',
+            fishOracle: '0x2279b7a0a67db372996a5fab50d91eaa73d2ebe6',
             sFISH: '0x0165878A594ca255338adfa4d48449f69242Eb8F',
             dev: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
             op: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',

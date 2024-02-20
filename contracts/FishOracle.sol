@@ -8,6 +8,7 @@ import "@sushiswap/core/contracts/uniswapv2/interfaces/IUniswapV2Pair.sol";
 import "./libraries/FixedPoint.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./libraries/BoringMath.sol";
+import "hardhat/console.sol";
 
 // solhint-disable not-rely-on-time
 
